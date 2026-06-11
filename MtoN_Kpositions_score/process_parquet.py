@@ -2,7 +2,7 @@ import duckdb as db
 import pandas as pd
 from typing import List
 from models import Professor, Student
-from calc_stability import calculate_stability
+from calc_compatibility import calculate_compatibility
 from generate import generate_random_instance
 
 def convert_to_parquet(students: List[Student], professors: List[Professor]) -> None:
@@ -19,7 +19,7 @@ def convert_to_parquet(students: List[Student], professors: List[Professor]) -> 
             professor_name = professor.name
             professor_scores = professor.interest_score_list
 
-            stability_score = calculate_stability(
+            compatibility_score = calculate_compatibility(
                 studentscores=student_scores,
                 professorscores=professor_scores
             )
@@ -28,7 +28,7 @@ def convert_to_parquet(students: List[Student], professors: List[Professor]) -> 
                 "studentName": student_name,
                 "EMPLID": emplID,
                 "professorName": professor_name,
-                "stabilityScore": float(stability_score)
+                "compatibilityScore": float(compatibility_score)
             })
 
     df = pd.DataFrame(rows)

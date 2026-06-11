@@ -7,32 +7,14 @@ from typing import List, Optional
 import time
 import duckdb as db
 from generate import generate_random_instance
-from process_parquet import convert_to_parquet
-from readparquet import fetch_sorted_results, pretty_print_results, load_preferences
 from matchM_to_N_score import match
+from calc_compatibility import calculate_compatibility
 
-
-def load_scores(parquet_file="matches.parquet"):
-    con = db.connect()
-
-    rows = con.execute("""
-        SELECT studentName, EMPLID, professorName, stabilityScore
-        FROM read_parquet(?)
-    """, [parquet_file]).fetchall()
-
-    con.close()
-
-    scores = {}
-
-    for student_name, emplID, professor_name, score in rows:
-        scores[(student_name, professor_name)] = score
-
-    return scores
 
 
 def stability_check_score(listof_students, listof_professors, parquet_file="matches.parquet"):
     unstablecnt = 0
-    scores = load_scores(parquet_file)
+    
 
     for student in listof_students:
         current_prof = None
@@ -46,7 +28,10 @@ def stability_check_score(listof_students, listof_professors, parquet_file="matc
             if current_prof is not None and professor.name == current_prof.name:
                 continue
 
-            pair_score = scores[(student.name, professor.name)]
+            pair_score = calculate_compatibility(
+            studentscores=student.interest_score_list,
+            professorscores=professor.interest_score_list
+)
 
             #Student does not prefer this professor over current match
             if pair_score <= current_score:
@@ -81,6 +66,5 @@ def stability_check_score(listof_students, listof_professors, parquet_file="matc
 if __name__ == "__main__":
     print("Begin stability testing")
     students, professors = generate_random_instance()
-    convert_to_parquet(students, professors)
     match(students, professors)
     stability_check_score(students, professors)
